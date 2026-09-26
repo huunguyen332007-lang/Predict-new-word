@@ -4,18 +4,12 @@ Database connection layer.
 FastAPI never talks to Postgres "directly" — it goes through a pool
 that is created once at startup and closed once at shutdown.
 """
-import sys
-from pathlib import Path
 
 from typing import AsyncGenerator
 
 import asyncpg
 
-# Thêm thư mục 'src' vào sys.path TRƯỚC KHI import module 'core'
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-
-# Sau đó mới import từ 'core'
-from core.config import settings
+from src.core.config import settings
 
 pool: asyncpg.Pool | None = None
 

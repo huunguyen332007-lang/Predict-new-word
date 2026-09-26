@@ -1,30 +1,28 @@
-from datetime import datetime
+from fastapi import APIRouter, HTTPException, status
+from src.schemas.chat import (
+    ChatRequest, 
+    ChatResponse, 
+    ConversationCreate, 
+    ConversationResponse
+)
+from src.services.chat import chat_service
 
-from pydantic import BaseModel, Field
+router = APIRouter(
+    prefix="/chat",
+    tags=["Chat & Prediction Engine"]
+)
 
+@router.post("/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
+async def create_conversation(payload: ConversationCreate):
+    """API Tạo một cuộc hội thoại mới"""
+    return await chat_service.create_conversation(payload)
 
-class ChatRequest(BaseModel):
-    content: str = Field(..., min_length=1, max_length=20_000)
-    conversation_id: int
-
-
-class MessageResponse(BaseModel):
-    id: int
-    role: str
-    content: str
-    conversation_id: int | None = None
-    created_at: datetime
-
-
-class ChatResponse(BaseModel):
-    user_message: MessageResponse
-    assistant_message: MessageResponse
-
-
-class ConversationCreate(BaseModel):
-    title: str = Field(..., min_length=1, max_length=100)
-
-
-class ConversationResponse(BaseModel):
-    id: int
-    title: str | None = None
+@router.post("/message", response_model=ChatResponse, status_code=status.HTTP_200_OK)
+async def send_message(payload: ChatRequest):
+    """API Gửi tin nhắn và nhận phản hồi dự đoán"""
+    if not payload.content.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nội dung tin nhắn không được để trống."
+        )
+    return await chat_service.process_chat(payload)
